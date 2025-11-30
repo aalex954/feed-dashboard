@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Feed Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2338bdf8'/%3E%3Cstop offset='100%25' stop-color='%23818cf8'/%3E%3C/linearGradient%3E%3ClinearGradient id='g2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230f172a'/%3E%3Cstop offset='100%25' stop-color='%23020617'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='12' width='44' height='32' rx='4' fill='url(%23g2)' stroke='url(%23g1)' stroke-width='2.5'/%3E%3Crect x='10' y='18' width='32' height='20' rx='2' fill='%230f172a'/%3E%3Ccircle cx='26' cy='28' r='7' fill='none' stroke='%2338bdf8' stroke-width='2'/%3E%3Ccircle cx='26' cy='28' r='3' fill='%2338bdf8'/%3E%3Cpath d='M48 22 L58 16 L58 36 L48 30 Z' fill='url(%23g1)'/%3E%3Ccircle cx='52' cy='48' r='8' fill='none' stroke='%2322c55e' stroke-width='2' opacity='0.8'/%3E%3Ccircle cx='52' cy='48' r='4' fill='%2322c55e'/%3E%3Ccircle cx='10' cy='50' r='4' fill='none' stroke='%23818cf8' stroke-width='1.5' opacity='0.6'/%3E%3C/svg%3E" />
+    <style>
+        :root {
+            --bg: #0f172a;
+            --bg-alt: #111827;
+            --card-bg: #020617;
+            --border-subtle: #1f2937;
+            --accent: #38bdf8;
+            --accent-soft: rgba(56, 189, 248, 0.12);
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+            --danger: #f97373;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                sans-serif;
+            background: radial-gradient(circle at top, #0b1120 0, #020617 55%, #000 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        header {
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(90deg,
+                    rgba(56, 189, 248, 0.14),
+                    rgba(129, 140, 248, 0.14),
+                    transparent 70%);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        header h1 {
+            font-size: 1.1rem;
+            margin: 0;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .header-logo {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        header h1 span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            text-transform: none;
+        }
+
+        header .right-tools {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        header select {
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            border-radius: 999px;
+            padding: 0.2rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        header button {
+            background: var(--accent-soft);
+            border-radius: 999px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--accent);
+            padding: 0.25rem 0.8rem;
+            font-size: 0.78rem;
+            cursor: pointer;
+        }
+
+        header button:hover {
+            background: rgba(56, 189, 248, 0.18);
+        }
+
+        .sidebar {
+            width: 320px;
+            min-width: 320px;
+            max-width: 100%;
+            background: radial-gradient(circle at top left, #020617 0, #020617 50%, #000 100%);
+            border-right: 1px solid var(--border-subtle);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex-shrink: 0;
+            transition: width 0.25s ease, min-width 0.25s ease, padding 0.25s ease, opacity 0.25s ease;
+        }
+
+        .sidebar.hidden {
+            width: 0;
+            min-width: 0;
+            padding: 0;
+            opacity: 0;
+            overflow: hidden;
+            border-right: none;
+        }
+
+        /* Responsive video sizing based on column count */
+        .grid.cols-1 .camera-card-body {
+            aspect-ratio: 16 / 9;
+            max-height: 70vh;
+        }
+
+        .grid.cols-2 .camera-card-body {
+            aspect-ratio: 16 / 9;
+        }
+
+        .grid.cols-3 .camera-card-body {
+            aspect-ratio: 16 / 9;
+        }
+
+        .grid.cols-4 .camera-card-body {
+            aspect-ratio: 16 / 9;
+        }
+
+        .grid.cols-5 .camera-card-body {
+            aspect-ratio: 16 / 9;
+        }
+
+        .btn-toggle {
+            background: var(--accent-soft);
+            border-radius: 999px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--accent);
+            padding: 0.25rem 0.8rem;
+            font-size: 0.78rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .btn-toggle:hover {
+            background: rgba(56, 189, 248, 0.18);
+        }
+
+        .btn-toggle svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .sidebar-section {
+            border-radius: 0.75rem;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(31, 41, 55, 0.9);
+            padding: 0.75rem 0.8rem;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .sidebar-section h2 {
+            font-size: 0.9rem;
+            margin: 0 0 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-main);
+        }
+
+        .sidebar-section h2 span {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .hint {
+            font-size: 0.73rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.45rem;
+            margin-top: 0.25rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .field label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .field input,
+        .field select {
+            background: #020617;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-subtle);
+            padding: 0.4rem 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-main);
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .field input::placeholder {
+            color: #4b5563;
+        }
+
+        .inline-fields {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 0.4rem;
+        }
+
+        .sidebar button.primary {
+            width: 100%;
+            margin-top: 0.35rem;
+            border-radius: 0.6rem;
+            border: 1px solid rgba(56, 189, 248, 0.6);
+            background: linear-gradient(135deg,
+                    rgba(56, 189, 248, 0.25),
+                    rgba(37, 99, 235, 0.4));
+            padding: 0.45rem 0.7rem;
+            color: #e0f2fe;
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .sidebar button.primary:hover {
+            filter: brightness(1.06);
+        }
+
+        .sidebar button.secondary {
+            width: 100%;
+            margin-top: 0.35rem;
+            border-radius: 0.6rem;
+            border: 1px solid rgba(55, 65, 81, 0.9);
+            background: rgba(15, 23, 42, 0.75);
+            padding: 0.45rem 0.7rem;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .sidebar button.secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .config-buttons {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .config-buttons button {
+            flex: 1;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-top: 0.35rem;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+        }
+
+        .file-input-label {
+            display: block;
+            width: 100%;
+            border-radius: 0.6rem;
+            border: 1px dashed rgba(56, 189, 248, 0.4);
+            background: rgba(56, 189, 248, 0.08);
+            padding: 0.6rem 0.7rem;
+            color: var(--accent);
+            font-size: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .file-input-label:hover {
+            border-color: var(--accent);
+            background: rgba(56, 189, 248, 0.15);
+        }
+
+        .config-status {
+            font-size: 0.73rem;
+            margin-top: 0.4rem;
+            padding: 0.3rem 0.5rem;
+            border-radius: 0.4rem;
+            display: none;
+        }
+
+        .config-status.success {
+            display: block;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
+        }
+
+        .config-status.error {
+            display: block;
+            background: rgba(249, 115, 115, 0.15);
+            border: 1px solid rgba(249, 115, 115, 0.3);
+            color: #fca5a5;
+        }
+
+        .camera-list {
+            max-height: 40vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 0.2rem;
+        }
+
+        .camera-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.4rem;
+            padding: 0.35rem 0.25rem;
+            border-bottom: 1px dashed rgba(31, 41, 55, 0.75);
+        }
+
+        .camera-item:last-child {
+            border-bottom: none;
+        }
+
+        .camera-item-main {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+            min-width: 0;
+        }
+
+        .camera-item-title {
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .camera-item-meta {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .camera-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.7rem;
+        }
+
+        .camera-item-actions input[type="checkbox"] {
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border-radius: 999px;
+            border: 1px solid rgba(55, 65, 81, 0.9);
+            color: var(--text-muted);
+            padding: 0.1rem 0.4rem;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .content {
+            flex: 1;
+            padding: 0.8rem 1rem 0;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .content-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            gap: 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .content-header .status {
+            color: var(--text-muted);
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.1rem 0.5rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(31, 41, 55, 0.9);
+        }
+
+        .pill-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+        }
+
+        .grid {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-auto-rows: min-content;
+            align-content: start;
+            gap: 0.75rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 1rem;
+        }
+
+        .grid.cols-1 {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .grid.cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .grid.cols-3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .grid.cols-4 {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .grid.cols-5 {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+
+        @media (max-width: 900px) {
+            .app {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                min-width: unset;
+                border-right: none;
+                border-bottom: 1px solid var(--border-subtle);
+                max-height: 50vh;
+            }
+
+            .grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 280px;
+                min-width: 280px;
+            }
+        }
+
+        .camera-card {
+            position: relative;
+            border-radius: 0.9rem;
+            background: linear-gradient(145deg,
+                    rgba(15, 23, 42, 0.96),
+                    rgba(2, 6, 23, 0.96));
+            border: 1px solid rgba(31, 41, 55, 0.9);
+            box-shadow: 0 14px 35px rgba(15, 23, 42, 0.9);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .camera-card-header {
+            padding: 0.45rem 0.6rem 0.35rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+            background: radial-gradient(circle at top left,
+                    rgba(56, 189, 248, 0.12),
+                    transparent 55%);
+        }
+
+        .camera-card-title {
+            font-size: 0.82rem;
+            font-weight: 500;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .camera-card-subtitle {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .camera-card-tools {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 0.1rem 0.4rem;
+            border-radius: 999px;
+            border: 1px solid rgba(55, 65, 81, 0.9);
+            color: var(--text-muted);
+        }
+
+        .btn-link {
+            font-size: 0.7rem;
+            padding: 0.1rem 0.45rem;
+            border-radius: 999px;
+            border: 1px solid rgba(37, 99, 235, 0.8);
+            color: #bfdbfe;
+            background: rgba(37, 99, 235, 0.2);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-link:hover {
+            filter: brightness(1.06);
+        }
+
+        .camera-card-body {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: radial-gradient(circle at center, #020617 0, #000 80%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .camera-frame {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border: none;
+            background: #020617;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            bottom: 0.3rem;
+            right: 0.4rem;
+            padding: 0.18rem 0.4rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(31, 41, 55, 0.9);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .camera-overlay-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #22c55e;
+        }
+
+        .camera-overlay-dot.stale {
+            background: #f97373;
+        }
+
+        .empty-state {
+            border-radius: 0.9rem;
+            border: 1px dashed rgba(55, 65, 81, 0.9);
+            padding: 1.5rem 1.2rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: rgba(15, 23, 42, 0.6);
+            text-align: center;
+            align-self: stretch;
+            justify-self: stretch;
+        }
+
+        .empty-state strong {
+            color: var(--text-main);
+        }
+
+        .empty-state code {
+            font-size: 0.8rem;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.3rem;
+            border: 1px solid rgba(31, 41, 55, 0.9);
+        }
+
+        /* Maximized video overlay */
+        .video-maximize-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .video-maximize-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .video-maximize-container {
+            position: relative;
+            width: 100%;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.98));
+            border-radius: 1rem;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .video-maximize-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+            background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 55%);
+        }
+
+        .video-maximize-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .video-maximize-close {
+            background: rgba(249, 115, 115, 0.2);
+            border: 1px solid rgba(249, 115, 115, 0.4);
+            color: #fca5a5;
+            border-radius: 999px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .video-maximize-close:hover {
+            background: rgba(249, 115, 115, 0.3);
+            border-color: rgba(249, 115, 115, 0.6);
+        }
+
+        .video-maximize-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            padding: 1rem;
+        }
+
+        .video-maximize-body video,
+        .video-maximize-body img,
+        .video-maximize-body iframe {
+            max-width: 100%;
+            max-height: calc(90vh - 100px);
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 0.5rem;
+        }
+
+        /* Clickable indicator for camera cards */
+        .camera-card-body {
+            cursor: pointer;
+        }
+
+        .camera-card-body::after {
+            content: '⛶';
+            position: absolute;
+            top: 0.4rem;
+            left: 0.4rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(31, 41, 55, 0.9);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+
+        .camera-card-body:hover::after {
+            opacity: 1;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+
+<body>
+    <header>
+        <h1>
+            <svg class="header-logo" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="logoGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8"/>
+                        <stop offset="100%" stop-color="#818cf8"/>
+                    </linearGradient>
+                    <linearGradient id="logoGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#0f172a"/>
+                        <stop offset="100%" stop-color="#020617"/>
+                    </linearGradient>
+                </defs>
+                <!-- Camera body -->
+                <rect x="4" y="12" width="44" height="32" rx="4" fill="url(#logoGrad2)" stroke="url(#logoGrad1)" stroke-width="2.5"/>
+                <!-- Screen area -->
+                <rect x="10" y="18" width="32" height="20" rx="2" fill="#0f172a"/>
+                <!-- Lens outer ring -->
+                <circle cx="26" cy="28" r="7" fill="none" stroke="#38bdf8" stroke-width="2"/>
+                <!-- Lens inner -->
+                <circle cx="26" cy="28" r="3" fill="#38bdf8"/>
+                <!-- Camera arm/antenna -->
+                <path d="M48 22 L58 16 L58 36 L48 30 Z" fill="url(#logoGrad1)"/>
+                <!-- Live indicator -->
+                <circle cx="52" cy="48" r="8" fill="none" stroke="#22c55e" stroke-width="2" opacity="0.8"/>
+                <circle cx="52" cy="48" r="4" fill="#22c55e"/>
+                <!-- Small decorative dot -->
+                <circle cx="10" cy="50" r="4" fill="none" stroke="#818cf8" stroke-width="1.5" opacity="0.6"/>
+            </svg>
+            Feed Dashboard
+            <span id="dashboardSubtitle">Live traffic camera feeds</span>
+        </h1>
+        <div class="right-tools">
+            <button id="sidebarToggle" class="btn-toggle" type="button" title="Toggle sidebar">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                </svg>
+                <span id="sidebarToggleText">Hide Panel</span>
+            </button>
+            <label for="columnSelect">Layout:</label>
+            <select id="columnSelect" title="Grid columns">
+                <option value="1">1 column</option>
+                <option value="2">2 columns</option>
+                <option value="3" selected>3 columns</option>
+                <option value="4">4 columns</option>
+                <option value="5">5 columns</option>
+            </select>
+            <button id="resetBtn" type="button">Reset to sample feeds</button>
+        </div>
+    </header>
+
+    <div class="app">
+        <aside id="sidebar" class="sidebar">
+            <section class="sidebar-section">
+                <h2>
+                    Add / Edit feeds
+                    <span>URLs can be JPEGs, HLS, or full pages</span>
+                </h2>
+                <form id="cameraForm">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="camName">Camera name</label>
+                            <input id="camName" type="text" required placeholder="e.g. 3rd &amp; Camera Name" />
+                        </div>
+                        <div class="field">
+                            <label for="camUrl">Feed URL</label>
+                            <input id="camUrl" type="url" required placeholder="https://… or http://…" />
+                        </div>
+                        <div class="inline-fields">
+                            <div class="field">
+                                <label for="camType">Type</label>
+                                <select id="camType">
+                                    <option value="image">Snapshot image (auto-refresh)</option>
+                                    <option value="iframe">Full page / stream (iframe)</option>
+                                    <option value="hls">HLS (.m3u8 stream)</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="camRefresh">Refresh (s)</label>
+                                <input id="camRefresh" type="number" min="5" step="1" value="15" />
+                            </div>
+                        </div>
+                    </div>
+                    <button class="primary" type="submit">Add camera to dashboard</button>
+                </form>
+            </section>
+
+            <section class="sidebar-section">
+                <h2>
+                    Active feeds
+                    <span id="cameraCount">0</span>
+                </h2>
+                <p class="hint">
+                    Toggle visibility or remove feeds. Configuration is stored locally in
+                    your browser (no server).
+                </p>
+                <div id="cameraList" class="camera-list"></div>
+            </section>
+
+            <section class="sidebar-section">
+                <h2>
+                    Import / Export
+                    <span>JSON config files</span>
+                </h2>
+                <p class="hint">
+                    Load feeds from a JSON config file or export your current configuration.
+                </p>
+                <div class="file-input-wrapper">
+                    <label class="file-input-label" for="configFileInput">
+                        📂 Choose config file to import...
+                    </label>
+                    <input type="file" id="configFileInput" accept=".json,application/json" />
+                </div>
+                <div id="configStatus" class="config-status"></div>
+                <div class="config-buttons">
+                    <button id="exportConfigBtn" class="secondary" type="button">Export Config</button>
+                    <button id="mergeConfigBtn" class="secondary" type="button" title="Import without replacing existing feeds">Merge Import</button>
+                </div>
+            </section>
+        </aside>
+
+        <main class="content">
+            <div class="content-header">
+                <div class="status">
+                    <span class="pill">
+                        <span class="pill-dot"></span>
+                        Live camera snapshot dashboard
+                    </span>
+                </div>
+                <div class="status" id="summaryStatus">
+                    0 feeds configured
+                </div>
+            </div>
+
+            <div id="cameraGrid" class="grid cols-2"></div>
+        </main>
+    </div>
+
+    <!-- Maximized video overlay -->
+    <div id="videoMaximizeOverlay" class="video-maximize-overlay">
+        <div class="video-maximize-container">
+            <div class="video-maximize-header">
+                <span id="videoMaximizeTitle" class="video-maximize-title"></span>
+                <button id="videoMaximizeClose" class="video-maximize-close" type="button">✕ Close</button>
+            </div>
+            <div id="videoMaximizeBody" class="video-maximize-body"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration & state persistence ---------------------------
+
+        const STORAGE_KEY = "terryCameraDashboard.v1";
+
+        const DEFAULT_CAMERAS = [
+            // Demo: HLS Live Stream - Big Buck Bunny test stream
+            {
+                id: "demo-hls-1",
+                name: "Demo: HLS Live Stream",
+                url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+                type: "hls",
+                refreshMs: 0,
+                visible: true,
+                notes: "Example HLS (.m3u8) stream - Big Buck Bunny test video from Mux"
+            },
+            // Demo: Auto-refreshing image snapshot
+            {
+                id: "demo-image-1",
+                name: "Demo: Image Snapshot (Picsum)",
+                url: "https://picsum.photos/640/360",
+                type: "image",
+                refreshMs: 10000,
+                visible: true,
+                notes: "Example auto-refreshing image feed - random image every 10 seconds"
+            },
+            // Demo: Another HLS stream
+            {
+                id: "demo-hls-2",
+                name: "Demo: HLS Test Pattern",
+                url: "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8",
+                type: "hls",
+                refreshMs: 0,
+                visible: true,
+                notes: "Apple's bipbop HLS test stream with multiple quality levels"
+            },
+            // Demo: Iframe embed example
+            {
+                id: "demo-iframe-1",
+                name: "Demo: Iframe Embed (Wikipedia)",
+                url: "https://en.wikipedia.org/wiki/Webcam",
+                type: "iframe",
+                refreshMs: 0,
+                visible: true,
+                notes: "Example iframe embed - can embed any web page or streaming player"
+            }
+        ];
+
+        let state = {
+            cameras: [],
+            columns: 3,
+            sidebarVisible: true,
+            dashboardSubtitle: ''
+        };
+
+        const refreshTimers = new Map(); // cameraId -> intervalId
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) {
+                    state.cameras = DEFAULT_CAMERAS.map((c) => ({ ...c }));
+                    state.columns = 2;
+                    state.sidebarVisible = true;
+                    return;
+                }
+                const parsed = JSON.parse(raw);
+                state.cameras = Array.isArray(parsed.cameras)
+                    ? parsed.cameras
+                    : DEFAULT_CAMERAS.map((c) => ({ ...c }));
+                if (typeof parsed.columns === "number") {
+                    state.columns = Math.min(5, Math.max(1, parsed.columns));
+                } else {
+                    state.columns = 2;
+                }
+                state.sidebarVisible = parsed.sidebarVisible !== false;
+                state.dashboardSubtitle = typeof parsed.dashboardSubtitle === 'string' ? parsed.dashboardSubtitle : '';
+            } catch (e) {
+                console.warn("Failed to load saved dashboard state:", e);
+                state.cameras = DEFAULT_CAMERAS.map((c) => ({ ...c }));
+                state.columns = 2;
+                state.sidebarVisible = true;
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(
+                    STORAGE_KEY,
+                    JSON.stringify({
+                        cameras: state.cameras,
+                        columns: state.columns,
+                        sidebarVisible: state.sidebarVisible,
+                        dashboardSubtitle: state.dashboardSubtitle
+                    })
+                );
+            } catch (e) {
+                console.warn("Failed to save state:", e);
+            }
+        }
+
+        // --- DOM helpers -------------------------------------------------
+
+        const cameraGridEl = document.getElementById("cameraGrid");
+        const cameraListEl = document.getElementById("cameraList");
+        const cameraCountEl = document.getElementById("cameraCount");
+        const summaryStatusEl = document.getElementById("summaryStatus");
+        const columnSelectEl = document.getElementById("columnSelect");
+        const resetBtnEl = document.getElementById("resetBtn");
+        const sidebarEl = document.getElementById("sidebar");
+        const sidebarToggleEl = document.getElementById("sidebarToggle");
+        const sidebarToggleTextEl = document.getElementById("sidebarToggleText");
+        const cameraFormEl = document.getElementById("cameraForm");
+        const camNameEl = document.getElementById("camName");
+        const camUrlEl = document.getElementById("camUrl");
+        const camTypeEl = document.getElementById("camType");
+        const camRefreshEl = document.getElementById("camRefresh");
+        const configFileInputEl = document.getElementById("configFileInput");
+        const configStatusEl = document.getElementById("configStatus");
+        const exportConfigBtnEl = document.getElementById("exportConfigBtn");
+        const mergeConfigBtnEl = document.getElementById("mergeConfigBtn");
+        const videoMaximizeOverlayEl = document.getElementById("videoMaximizeOverlay");
+        const videoMaximizeTitleEl = document.getElementById("videoMaximizeTitle");
+        const videoMaximizeBodyEl = document.getElementById("videoMaximizeBody");
+        const videoMaximizeCloseEl = document.getElementById("videoMaximizeClose");
+        const dashboardSubtitleEl = document.getElementById("dashboardSubtitle");
+
+        // Track maximized HLS instance for cleanup
+        let maximizedHlsInstance = null;
+
+        function clearRefreshTimers() {
+            for (const id of refreshTimers.keys()) {
+                clearInterval(refreshTimers.get(id));
+            }
+            refreshTimers.clear();
+        }
+
+        function setColumns(cols) {
+            cameraGridEl.classList.remove("cols-1", "cols-2", "cols-3", "cols-4", "cols-5");
+            cameraGridEl.classList.add(`cols-${cols}`);
+            columnSelectEl.value = String(cols);
+        }
+
+        // --- Config File Import/Export (Secure) -------------------------
+
+        const ALLOWED_URL_PROTOCOLS = ['http:', 'https:'];
+        const ALLOWED_CAMERA_TYPES = ['image', 'iframe', 'hls'];
+        const MAX_CONFIG_SIZE = 1024 * 1024; // 1MB max file size
+        const MAX_CAMERAS = 100; // Maximum number of cameras allowed
+
+        function showConfigStatus(message, isError = false) {
+            configStatusEl.textContent = message;
+            configStatusEl.className = 'config-status ' + (isError ? 'error' : 'success');
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                configStatusEl.className = 'config-status';
+            }, 5000);
+        }
+
+        function sanitizeString(str, maxLength = 200) {
+            if (typeof str !== 'string') return '';
+            // Remove any HTML tags and limit length
+            return str.replace(/<[^>]*>/g, '').slice(0, maxLength).trim();
+        }
+
+        function validateUrl(urlString) {
+            try {
+                const url = new URL(urlString);
+                if (!ALLOWED_URL_PROTOCOLS.includes(url.protocol)) {
+                    return { valid: false, error: `Invalid protocol: ${url.protocol}. Only http/https allowed.` };
+                }
+                return { valid: true, url: url.href };
+            } catch (e) {
+                return { valid: false, error: 'Invalid URL format' };
+            }
+        }
+
+        function validateCamera(cam, index) {
+            const errors = [];
+            
+            // Validate required fields
+            if (!cam || typeof cam !== 'object') {
+                return { valid: false, errors: [`Camera ${index}: Invalid camera object`] };
+            }
+
+            // Validate and sanitize name
+            if (!cam.name || typeof cam.name !== 'string') {
+                errors.push(`Camera ${index}: Missing or invalid name`);
+            }
+
+            // Validate URL
+            if (!cam.url) {
+                errors.push(`Camera ${index}: Missing URL`);
+            } else {
+                const urlResult = validateUrl(cam.url);
+                if (!urlResult.valid) {
+                    errors.push(`Camera ${index}: ${urlResult.error}`);
+                }
+            }
+
+            // Validate type
+            if (cam.type && !ALLOWED_CAMERA_TYPES.includes(cam.type)) {
+                errors.push(`Camera ${index}: Invalid type '${cam.type}'. Allowed: ${ALLOWED_CAMERA_TYPES.join(', ')}`);
+            }
+
+            // Validate refreshMs
+            if (cam.refreshMs !== undefined && (typeof cam.refreshMs !== 'number' || cam.refreshMs < 0)) {
+                errors.push(`Camera ${index}: Invalid refreshMs value`);
+            }
+
+            return { valid: errors.length === 0, errors };
+        }
+
+        function sanitizeCamera(cam) {
+            const urlResult = validateUrl(cam.url);
+            return {
+                id: cam.id || `cam-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                name: sanitizeString(cam.name || 'Unnamed Camera', 100),
+                url: urlResult.valid ? urlResult.url : '',
+                type: ALLOWED_CAMERA_TYPES.includes(cam.type) ? cam.type : 'image',
+                refreshMs: typeof cam.refreshMs === 'number' && cam.refreshMs >= 0 ? Math.min(cam.refreshMs, 300000) : 15000,
+                visible: cam.visible !== false,
+                notes: sanitizeString(cam.notes || '', 500)
+            };
+        }
+
+        function validateConfig(config) {
+            const errors = [];
+            
+            if (!config || typeof config !== 'object') {
+                return { valid: false, errors: ['Invalid config format: expected JSON object'] };
+            }
+
+            if (!Array.isArray(config.cameras)) {
+                return { valid: false, errors: ['Invalid config: missing or invalid "cameras" array'] };
+            }
+
+            if (config.cameras.length > MAX_CAMERAS) {
+                return { valid: false, errors: [`Too many cameras: max ${MAX_CAMERAS} allowed`] };
+            }
+
+            // Validate each camera
+            config.cameras.forEach((cam, index) => {
+                const result = validateCamera(cam, index + 1);
+                if (!result.valid) {
+                    errors.push(...result.errors);
+                }
+            });
+
+            return { valid: errors.length === 0, errors };
+        }
+
+        function parseConfigFile(fileContent) {
+            try {
+                return { success: true, data: JSON.parse(fileContent) };
+            } catch (e) {
+                return { success: false, error: 'Invalid JSON format: ' + e.message };
+            }
+        }
+
+        function importConfig(config, merge = false) {
+            const validation = validateConfig(config);
+            
+            if (!validation.valid) {
+                showConfigStatus('Validation failed: ' + validation.errors.slice(0, 3).join('; '), true);
+                console.warn('Config validation errors:', validation.errors);
+                return false;
+            }
+
+            // Sanitize all cameras
+            const sanitizedCameras = config.cameras.map(sanitizeCamera).filter(cam => cam.url);
+
+            if (sanitizedCameras.length === 0) {
+                showConfigStatus('No valid cameras found in config file', true);
+                return false;
+            }
+
+            if (merge) {
+                // Merge: add new cameras, skip duplicates by URL
+                const existingUrls = new Set(state.cameras.map(c => c.url));
+                const newCameras = sanitizedCameras.filter(c => !existingUrls.has(c.url));
+                state.cameras = [...state.cameras, ...newCameras];
+                showConfigStatus(`Merged ${newCameras.length} new camera(s). ${sanitizedCameras.length - newCameras.length} duplicates skipped.`);
+            } else {
+                // Replace all cameras
+                state.cameras = sanitizedCameras;
+                showConfigStatus(`Imported ${sanitizedCameras.length} camera(s) successfully.`);
+            }
+
+            // Apply optional settings from config
+            if (typeof config.columns === 'number' && config.columns >= 1 && config.columns <= 5) {
+                state.columns = config.columns;
+            }
+            
+            // Apply dashboard subtitle/description from config
+            if (typeof config.subtitle === 'string') {
+                state.dashboardSubtitle = sanitizeString(config.subtitle, 200);
+            } else if (typeof config.description === 'string') {
+                state.dashboardSubtitle = sanitizeString(config.description, 200);
+            } else if (typeof config.name === 'string' && config.name !== 'Camera Dashboard Configuration') {
+                state.dashboardSubtitle = sanitizeString(config.name, 200);
+            }
+
+            saveState();
+            setColumns(state.columns);
+            updateDashboardSubtitle();
+            renderSidebarList();
+            renderGrid();
+            updateSummary();
+            return true;
+        }
+
+        function exportConfig() {
+            const config = {
+                name: 'Camera Dashboard Configuration',
+                subtitle: state.dashboardSubtitle || 'Live traffic camera feeds',
+                version: '1.0',
+                exportedAt: new Date().toISOString(),
+                columns: state.columns,
+                cameras: state.cameras.map(cam => ({
+                    id: cam.id,
+                    name: cam.name,
+                    url: cam.url,
+                    type: cam.type,
+                    refreshMs: cam.refreshMs,
+                    visible: cam.visible,
+                    notes: cam.notes || ''
+                }))
+            };
+
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `camera-dashboard-config-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showConfigStatus('Configuration exported successfully.');
+        }
+
+        function handleConfigFileSelect(event, merge = false) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Security: Check file size
+            if (file.size > MAX_CONFIG_SIZE) {
+                showConfigStatus(`File too large: max ${MAX_CONFIG_SIZE / 1024}KB allowed`, true);
+                configFileInputEl.value = '';
+                return;
+            }
+
+            // Security: Check file type
+            if (!file.type.includes('json') && !file.name.endsWith('.json')) {
+                showConfigStatus('Invalid file type: only JSON files allowed', true);
+                configFileInputEl.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const result = parseConfigFile(e.target.result);
+                if (!result.success) {
+                    showConfigStatus(result.error, true);
+                } else {
+                    importConfig(result.data, merge);
+                }
+                configFileInputEl.value = ''; // Reset input
+            };
+            reader.onerror = () => {
+                showConfigStatus('Error reading file', true);
+                configFileInputEl.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        // --- Video Maximize Functions ------------------------------------
+
+        function openMaximizedView(cam) {
+            videoMaximizeTitleEl.textContent = cam.name || '(unnamed feed)';
+            videoMaximizeBodyEl.innerHTML = '';
+
+            if (cam.type === 'hls') {
+                const video = document.createElement('video');
+                video.autoplay = true;
+                video.muted = true;
+                video.playsInline = true;
+                video.controls = true;
+
+                if (window.Hls && Hls.isSupported()) {
+                    maximizedHlsInstance = new Hls();
+                    maximizedHlsInstance.loadSource(cam.url);
+                    maximizedHlsInstance.attachMedia(video);
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = cam.url;
+                }
+
+                videoMaximizeBodyEl.appendChild(video);
+            } else if (cam.type === 'image') {
+                const img = document.createElement('img');
+                const base = cam.url;
+                const sep = base.includes('?') ? '&' : '?';
+                img.src = base + sep + 't=' + Date.now();
+                img.alt = cam.name || 'Camera snapshot';
+                videoMaximizeBodyEl.appendChild(img);
+            } else {
+                const iframe = document.createElement('iframe');
+                iframe.src = cam.url;
+                iframe.style.width = '100%';
+                iframe.style.height = 'calc(90vh - 100px)';
+                iframe.style.border = 'none';
+                iframe.referrerPolicy = 'no-referrer';
+                videoMaximizeBodyEl.appendChild(iframe);
+            }
+
+            videoMaximizeOverlayEl.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMaximizedView() {
+            videoMaximizeOverlayEl.classList.remove('active');
+            document.body.style.overflow = '';
+
+            // Cleanup HLS instance
+            if (maximizedHlsInstance) {
+                maximizedHlsInstance.destroy();
+                maximizedHlsInstance = null;
+            }
+
+            // Clear content after transition
+            setTimeout(() => {
+                videoMaximizeBodyEl.innerHTML = '';
+            }, 300);
+        }
+
+        // Close on button click
+        videoMaximizeCloseEl.addEventListener('click', closeMaximizedView);
+
+        // Close on overlay background click
+        videoMaximizeOverlayEl.addEventListener('click', (e) => {
+            if (e.target === videoMaximizeOverlayEl) {
+                closeMaximizedView();
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && videoMaximizeOverlayEl.classList.contains('active')) {
+                closeMaximizedView();
+            }
+        });
+
+        // --- Rendering ---------------------------------------------------
+
+        function renderSidebarList() {
+            cameraListEl.innerHTML = "";
+            if (!state.cameras.length) {
+                cameraListEl.innerHTML =
+                    '<div class="hint">No feeds yet. Add one above to start.</div>';
+                cameraCountEl.textContent = "0";
+                return;
+            }
+
+            state.cameras.forEach((cam) => {
+                const row = document.createElement("div");
+                row.className = "camera-item";
+
+                const main = document.createElement("div");
+                main.className = "camera-item-main";
+
+                const title = document.createElement("div");
+                title.className = "camera-item-title";
+                title.textContent = cam.name || "(unnamed feed)";
+                main.appendChild(title);
+
+                const meta = document.createElement("div");
+                meta.className = "camera-item-meta";
+                // const typeLabel = cam.type === "iframe" ? "iframe/page" : "image";
+                // const refreshLabel = cam.type === "image"
+                //     ? `refresh ${Math.round((cam.refreshMs || 0) / 1000)}s`
+                //     : "no auto-refresh";
+                let typeLabel = "image";
+                if (cam.type === "iframe") typeLabel = "iframe/page";
+                if (cam.type === "hls") typeLabel = "HLS";
+
+                let refreshLabel;
+                if (cam.type === "image") {
+                    refreshLabel = `refresh ${Math.round((cam.refreshMs || 0) / 1000)}s`;
+                } else if (cam.type === "hls") {
+                    refreshLabel = "live stream";
+                } else {
+                    refreshLabel = "no auto-refresh";
+                }
+                meta.textContent = `${typeLabel} · ${refreshLabel}`;
+                main.appendChild(meta);
+
+                const actions = document.createElement("div");
+                actions.className = "camera-item-actions";
+
+                const visibleLabel = document.createElement("label");
+                visibleLabel.style.display = "flex";
+                visibleLabel.style.alignItems = "center";
+                visibleLabel.style.gap = "0.25rem";
+                visibleLabel.style.cursor = "pointer";
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.checked = cam.visible !== false;
+                checkbox.addEventListener("change", () => {
+                    cam.visible = checkbox.checked;
+                    saveState();
+                    renderGrid();
+                    updateSummary();
+                });
+
+                const txt = document.createElement("span");
+                txt.textContent = "Show";
+
+                visibleLabel.appendChild(checkbox);
+                visibleLabel.appendChild(txt);
+                actions.appendChild(visibleLabel);
+
+                const delBtn = document.createElement("button");
+                delBtn.type = "button";
+                delBtn.className = "btn-ghost";
+                delBtn.textContent = "Remove";
+                delBtn.addEventListener("click", () => {
+                    if (
+                        !confirm(
+                            `Remove camera "${cam.name || cam.id}" from this dashboard?`
+                        )
+                    ) {
+                        return;
+                    }
+                    state.cameras = state.cameras.filter((c) => c.id !== cam.id);
+                    saveState();
+                    renderSidebarList();
+                    renderGrid();
+                    updateSummary();
+                });
+                actions.appendChild(delBtn);
+
+                row.appendChild(main);
+                row.appendChild(actions);
+                cameraListEl.appendChild(row);
+            });
+
+            cameraCountEl.textContent = String(state.cameras.length);
+        }
+
+        function renderGrid() {
+            clearRefreshTimers();
+            cameraGridEl.innerHTML = "";
+
+            const visibleCams = state.cameras.filter((c) => c.visible !== false);
+
+            if (!visibleCams.length) {
+                const empty = document.createElement("div");
+                empty.className = "empty-state";
+                empty.innerHTML =
+                    "<strong>No feeds selected.</strong><br/>Enable feeds in the left panel, " +
+                    'or add HLS / WeatherBug URLs, JPEG images, or pages.';
+                cameraGridEl.appendChild(empty);
+                return;
+            }
+
+            visibleCams.forEach((cam) => {
+                const card = document.createElement("article");
+                card.className = "camera-card";
+
+                const header = document.createElement("div");
+                header.className = "camera-card-header";
+
+                const titleWrap = document.createElement("div");
+                titleWrap.className = "camera-card-title";
+                titleWrap.textContent = cam.name || "(unnamed feed)";
+
+                const subtitle = document.createElement("span");
+                subtitle.className = "camera-card-subtitle";
+                subtitle.textContent = cam.notes
+                    ? cam.notes
+                    : cam.url.length > 60
+                        ? cam.url.slice(0, 60) + "…"
+                        : cam.url;
+                titleWrap.appendChild(subtitle);
+                header.appendChild(titleWrap);
+
+                const tools = document.createElement("div");
+                tools.className = "camera-card-tools";
+
+                const badge = document.createElement("span");
+                badge.className = "badge";
+                badge.textContent = cam.type === "hls" ? "HLS" : cam.type === "iframe" ? "iframe" : "image";
+                tools.appendChild(badge);
+
+                const link = document.createElement("a");
+                link.href = cam.url;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.className = "btn-link";
+                link.textContent = "Open";
+                tools.appendChild(link);
+
+                header.appendChild(tools);
+                card.appendChild(header);
+
+                const body = document.createElement("div");
+                body.className = "camera-card-body";
+
+                // Add click handler to maximize the feed
+                body.addEventListener("click", (e) => {
+                    // Don't trigger if clicking on video controls
+                    if (e.target.tagName === 'VIDEO' && e.target.controls) {
+                        const rect = e.target.getBoundingClientRect();
+                        const controlsHeight = 40; // Approximate height of video controls
+                        if (e.clientY > rect.bottom - controlsHeight) {
+                            return; // Click was on controls area
+                        }
+                    }
+                    openMaximizedView(cam);
+                });
+
+                let lastUpdatedLabel = null;
+                let statusDot = null;
+
+                const overlay = document.createElement("div");
+                overlay.className = "camera-overlay";
+
+                statusDot = document.createElement("span");
+                statusDot.className = "camera-overlay-dot";
+
+                lastUpdatedLabel = document.createElement("span");
+                lastUpdatedLabel.textContent = "Loading…";
+
+                overlay.appendChild(statusDot);
+                overlay.appendChild(lastUpdatedLabel);
+
+                if (cam.type === "image") {
+                    const img = document.createElement("img");
+                    img.className = "camera-frame";
+                    img.alt = cam.name || "Camera snapshot";
+
+                    const refreshMs =
+                        typeof cam.refreshMs === "number" && cam.refreshMs >= 5000
+                            ? cam.refreshMs
+                            : 15000;
+
+                    const refresh = () => {
+                        const base = cam.url;
+                        const sep = base.includes("?") ? "&" : "?";
+                        img.src = base + sep + "t=" + Date.now();
+                    };
+
+                    img.addEventListener("load", () => {
+                        statusDot.classList.remove("stale");
+                        const now = new Date();
+                        lastUpdatedLabel.textContent =
+                            "Updated " +
+                            now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                    });
+
+                    img.addEventListener("error", () => {
+                        statusDot.classList.add("stale");
+                        lastUpdatedLabel.textContent = "Error loading feed";
+                    });
+
+                    refresh();
+                    const timerId = setInterval(refresh, refreshMs);
+                    refreshTimers.set(cam.id, timerId);
+
+                    body.appendChild(img);
+                } else if (cam.type === "hls") {
+                    const video = document.createElement("video");
+                    video.className = "camera-frame";
+                    video.autoplay = true;
+                    video.muted = true;
+                    video.playsInline = true;
+                    video.controls = true;
+
+                    // Basic status text
+                    lastUpdatedLabel.textContent = "Connecting…";
+
+                    if (window.Hls && Hls.isSupported()) {
+                        const hls = new Hls();
+                        hls.loadSource(cam.url);
+                        hls.attachMedia(video);
+
+                        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                            statusDot.classList.remove("stale");
+                            lastUpdatedLabel.textContent = "Live (HLS)";
+                        });
+
+                        hls.on(Hls.Events.ERROR, () => {
+                            statusDot.classList.add("stale");
+                            lastUpdatedLabel.textContent = "Stream error";
+                        });
+
+                        // Optional: track instance if you want to destroy later
+                        // refreshTimers.set(cam.id, { hlsInstance: hls });
+                    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                        // Safari / iOS native HLS
+                        video.src = cam.url;
+                        statusDot.classList.remove("stale");
+                        lastUpdatedLabel.textContent = "Live (native HLS)";
+                    } else {
+                        statusDot.classList.add("stale");
+                        lastUpdatedLabel.textContent = "HLS unsupported in this browser";
+                    }
+
+                    body.appendChild(video);
+                } else {
+                    // iframe fallback for pages/players
+                    const iframe = document.createElement("iframe");
+                    iframe.className = "camera-frame";
+                    iframe.src = cam.url;
+                    iframe.loading = "lazy";
+                    iframe.referrerPolicy = "no-referrer";
+                    iframe.title = cam.name || "Camera page";
+
+                    lastUpdatedLabel.textContent = "Embedded page (no auto-refresh)";
+                    body.appendChild(iframe);
+                }
+
+
+                body.appendChild(overlay);
+                card.appendChild(body);
+
+                cameraGridEl.appendChild(card);
+            });
+        }
+
+        function updateSummary() {
+            const total = state.cameras.length;
+            const visible = state.cameras.filter((c) => c.visible !== false).length;
+            summaryStatusEl.textContent = `${visible} visible · ${total} configured`;
+        }
+
+        // --- Events ------------------------------------------------------
+
+        columnSelectEl.addEventListener("change", () => {
+            const cols = Number(columnSelectEl.value) || 2;
+            state.columns = Math.min(5, Math.max(1, cols));
+            saveState();
+            setColumns(state.columns);
+            // Trigger resize recalculation after layout change
+            setTimeout(handleGridResize, 50);
+        });
+
+        sidebarToggleEl.addEventListener("click", () => {
+            state.sidebarVisible = !state.sidebarVisible;
+            saveState();
+            updateSidebarVisibility();
+        });
+
+        function updateSidebarVisibility() {
+            if (state.sidebarVisible) {
+                sidebarEl.classList.remove("hidden");
+                sidebarToggleTextEl.textContent = "Hide Panel";
+            } else {
+                sidebarEl.classList.add("hidden");
+                sidebarToggleTextEl.textContent = "Show Panel";
+            }
+            // Trigger resize recalculation after sidebar transition
+            setTimeout(handleGridResize, 300);
+        }
+
+        // --- Responsive Grid Handling ------------------------------------
+
+        function handleGridResize() {
+            // Force video elements to recalculate their dimensions
+            const videos = cameraGridEl.querySelectorAll('video.camera-frame');
+            videos.forEach(video => {
+                // Trigger a reflow to ensure proper sizing
+                video.style.display = 'none';
+                video.offsetHeight; // Force reflow
+                video.style.display = '';
+            });
+        }
+
+        // Debounce function to prevent excessive resize calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Handle window resize
+        const debouncedResize = debounce(handleGridResize, 150);
+        window.addEventListener('resize', debouncedResize);
+
+        // Handle sidebar transition end for smoother updates
+        sidebarEl.addEventListener('transitionend', handleGridResize);
+
+        resetBtnEl.addEventListener("click", () => {
+            if (
+                !confirm(
+                    "Reset to sample feeds? This will remove your current configuration."
+                )
+            ) {
+                return;
+            }
+            state.cameras = DEFAULT_CAMERAS.map((c) => ({ ...c }));
+            state.columns = 3;
+            state.dashboardSubtitle = '';
+            saveState();
+            setColumns(state.columns);
+            updateDashboardSubtitle();
+            renderSidebarList();
+            renderGrid();
+            updateSummary();
+        });
+
+        // Config file import/export event listeners
+        configFileInputEl.addEventListener("change", (e) => handleConfigFileSelect(e, false));
+        
+        mergeConfigBtnEl.addEventListener("click", () => {
+            // Trigger file input but mark as merge operation
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json,application/json';
+            input.onchange = (e) => handleConfigFileSelect(e, true);
+            input.click();
+        });
+
+        exportConfigBtnEl.addEventListener("click", exportConfig);
+
+        cameraFormEl.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const name = camNameEl.value.trim();
+            const url = camUrlEl.value.trim();
+            // const type = camTypeEl.value === "iframe" ? "iframe" : "image";
+            let type = "image";
+            if (camTypeEl.value === "iframe") type = "iframe";
+            if (camTypeEl.value === "hls") type = "hls";
+
+            let refreshSec = Number(camRefreshEl.value);
+            if (!Number.isFinite(refreshSec) || refreshSec < 5) {
+                refreshSec = 15;
+            }
+
+            if (!name || !url) {
+                alert("Please provide both a name and URL.");
+                return;
+            }
+
+            const id = `cam-${Date.now()}-${Math.random()
+                .toString(36)
+                .slice(2, 7)}`;
+
+            const cam = {
+                id,
+                name,
+                url,
+                type,
+                refreshMs: refreshSec * 1000,
+                visible: true,
+                notes: ""
+            };
+
+            state.cameras.push(cam);
+            saveState();
+            renderSidebarList();
+            renderGrid();
+            updateSummary();
+
+            cameraFormEl.reset();
+            camRefreshEl.value = "15";
+        });
+
+        // --- URL Parameters ----------------------------------------------
+
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                columns: params.get('columns') || params.get('cols') || params.get('layout'),
+                sidebar: params.get('sidebar') || params.get('panel'),
+            };
+        }
+
+        function applyUrlParams() {
+            const urlParams = getUrlParams();
+            
+            // Apply columns from URL if specified
+            if (urlParams.columns) {
+                const cols = parseInt(urlParams.columns, 10);
+                if (!isNaN(cols) && cols >= 1 && cols <= 5) {
+                    state.columns = cols;
+                }
+            }
+            
+            // Apply sidebar visibility from URL if specified
+            if (urlParams.sidebar !== null) {
+                const sidebarVal = urlParams.sidebar.toLowerCase();
+                if (sidebarVal === 'false' || sidebarVal === '0' || sidebarVal === 'hide' || sidebarVal === 'hidden') {
+                    state.sidebarVisible = false;
+                } else if (sidebarVal === 'true' || sidebarVal === '1' || sidebarVal === 'show' || sidebarVal === 'visible') {
+                    state.sidebarVisible = true;
+                }
+            }
+        }
+
+        // --- Dashboard Subtitle ------------------------------------------
+
+        function updateDashboardSubtitle() {
+            const defaultSubtitle = 'Live traffic camera feeds';
+            dashboardSubtitleEl.textContent = state.dashboardSubtitle || defaultSubtitle;
+        }
+
+        // --- Init --------------------------------------------------------
+
+        loadState();
+        applyUrlParams(); // Apply URL parameters after loading state (URL takes priority)
+        setColumns(state.columns);
+        updateSidebarVisibility();
+        updateDashboardSubtitle();
+        renderSidebarList();
+        renderGrid();
+        updateSummary();
+    </script>
+</body>
+
+</html>
