@@ -1,0 +1,51 @@
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Node / package managers (if you use any tooling)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build / dist outputs
+dist/
+build/
+out/
+.tmp/
+.temp/
+
+# Logs
+*.log
+logs/
+*.pid
+*.pid.lock
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+
+# Misc
+*.tmp
+*.temp
+
+# If you use bundlers or tooling with caches, uncomment as needed:
+# .parcel-cache/
+# .next/
+# .nuxt/
+# .sass-cache/
+# coverage/
+
+dashboard-config.json
