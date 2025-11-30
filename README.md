@@ -4,6 +4,9 @@ A modern, responsive web-based dashboard for monitoring live camera and video fe
 
 ![Dashboard Preview](https://img.shields.io/badge/Status-Live-brightgreen) ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
 
+![feed-dashboard](https://github.com/user-attachments/assets/b95e66d3-3338-4126-bd6a-cb28455ba95b)
+
+
 ## Features
 
 ### Multiple Feed Types
