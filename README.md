@@ -2,10 +2,13 @@
 
 A modern, responsive web-based dashboard for monitoring live camera and video feeds. Ships with demo feeds to get started quickly, and is easily customizable for traffic cameras, security feeds, or any streaming sources.
 
-![Dashboard Preview](https://img.shields.io/badge/Status-Live-brightgreen) ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
+
+![Deploy Feed Dashboard](https://github.com/aalex954/feed-dashboard/actions/workflows/static.yml/badge.svg) ![Dashboard Preview](https://img.shields.io/badge/Status-Live-brightgreen) 
 
 ![feed-dashboard](https://github.com/user-attachments/assets/b95e66d3-3338-4126-bd6a-cb28455ba95b)
 
+[**Feed Dashboard Demo**](https://aalex954.github.io/feed-dashboard/)
 
 ## Features
 
